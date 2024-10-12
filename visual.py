@@ -39,24 +39,21 @@ def get_problem(ip: str, token: str) -> dict:
 def str_to_int(array: list[str]) -> list[list[int]]:
     return [[int(char) for char in string] for string in array]
 
-# ボード画像を作成する関数
-def make_fig(board: list[list[int]], size: int) -> Image:
-    """二次元配列からボード画像を作成・保存し、画像オブジェクトを返す"""
+def make_fig(board: list[list[int]], fixed_width: int) -> Image:
     width = len(board[0])
     height = len(board)
-    
-    # 新しい画像を作成
     img = Image.new('RGB', (width, height))
     pixels = img.load()
-    
-    # ピクセルに色を設定
     for y in range(height):
         for x in range(width):
             pixels[x, y] = color_dict[board[y][x]]
-    
-    # 指定サイズに拡大
-    img = img.resize((size, size), resample=Image.NEAREST)
+    # 横幅を 1000 に固定し、縦幅を比率に基づいて計算
+    aspect_ratio = height / width
+    new_height = int(fixed_width * aspect_ratio)
+    img = img.resize((fixed_width, new_height), resample=Image.NEAREST)
     return img
+
+
 
 # ダミーの問題を生成する（テスト用）
 problem = make_problem(10, 10, 'diagonal', 42, False, False).to_json_dict()
@@ -83,7 +80,7 @@ match_time = datetime.timedelta(seconds=300)
 stop_at = start_at + match_time
 
 # Streamlitの設定
-st.title("Board Image ")
+st.markdown("# Board Image ")
 
 # カラム分割
 col1, col2 = st.columns(2)
@@ -96,11 +93,11 @@ with col2:
     st.image(goal, caption="最終盤面", use_column_width=True)
 
 st.markdown(f'''
-# ボード情報
+## ボード情報
 - 横: **{board_width}**
 - 縦: **{board_height}**
 
-# 時間
+## 時間
 - 開始時間: **{start_at}**
 - 終了時間: **{stop_at}**
 
@@ -132,7 +129,7 @@ goal.save(path, format="PNG")
 # 一般抜型の画像を表示（アコーディオン形式）
 
 st.markdown("## 一般抜型の画像")
-with st.expander("一般抜型の画像一覧を表示"):
+with st.expander("### 一般抜型の画像一覧を表示"):
     for i, general_cell in enumerate(general_cells):
         width, height = general_size[i]
         st.image(general_cell, caption=f"手数 {i+1}, 横 {width} , 縦 {height}", use_column_width=True)
@@ -141,15 +138,15 @@ with st.expander("一般抜型の画像一覧を表示"):
 
 # 一般抜型サイズの情報を文字列に整形して表示（アコーディオン形式）
 
-with st.expander("一般抜型サイズの詳細を表示"):
+with st.expander("### 一般抜型サイズの詳細を表示"):
     general_info = "\n".join([f"- 手数:{i+1},(横,縦) = ({size[0]}, {size[1]})" for i, size in enumerate(general_size)])
-    st.markdown(f'''
-    ## 一般抜型サイズ
-    {general_info}
-    ''')
+    st.markdown('## 一般抜型サイズ')
+    st.markdown(general_info)
+    
 
 
-# 一般抜型サイズの情報を文字列に整形して表示
-#general_info = "\n".join([f"- 手数:{i+1}, (横,縦) = ({size[0]}, {size[1]})" for i,size in enumerate(general_size)])
+
+
+
 
 
