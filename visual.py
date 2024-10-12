@@ -115,16 +115,6 @@ path = output_dir / "sample.png"
 goal.save(path, format="PNG")
 
 
-#st.write(f"画像が保存されました: {path}")
-#t.write(f"処理時間: {time.time() - program_start:.2f} 秒") 実行時間の表示
-
-# 一般抜型の画像を表示
-#st.markdown("## 一般抜型の画像")
-#for i, general_cell in enumerate(general_cells):
- #   width, height = general_size[i]
-  #  st.image(general_cell, caption=f"手数 {i+1},横 {width} , 縦 {height}", use_column_width=True)
-
-
 
 # 一般抜型の画像を表示（アコーディオン形式）
 
@@ -143,10 +133,6 @@ with st.expander("### 一般抜型サイズの詳細を表示"):
     st.markdown('## 一般抜型サイズ')
     st.markdown(general_info)
     
-
-
-
-
 
 
 
