@@ -39,7 +39,7 @@ def get_problem(ip: str, token: str) -> dict:
 def str_to_int(array: list[str]) -> list[list[int]]:
     return [[int(char) for char in string] for string in array]
 
-def make_fig(board: list[list[int]], fixed_width: int) -> Image:
+def make_fig(board: list[list[int]], size: int) -> Image:
     width = len(board[0])
     height = len(board)
     img = Image.new('RGB', (width, height))
@@ -47,12 +47,25 @@ def make_fig(board: list[list[int]], fixed_width: int) -> Image:
     for y in range(height):
         for x in range(width):
             pixels[x, y] = color_dict[board[y][x]]
-    # 横幅を 1000 に固定し、縦幅を比率に基づいて計算
-    aspect_ratio = height / width
-    new_height = int(fixed_width * aspect_ratio)
-    img = img.resize((fixed_width, new_height), resample=Image.NEAREST)
-    return img
 
+    if width > height:
+        new_width = size
+        new_height = int(size * height / width)
+        img = img.resize((new_width, new_height), resample=Image.NEAREST)
+        back = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        back.paste(img, (0, size//2 - new_height//2))
+        return back
+    elif width < height:
+        new_width = int(size * width / height)
+        new_height = size
+        img = img.resize((new_width, new_height), resample=Image.NEAREST)
+        back = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        back.paste(img, (size//2 - new_width//2, 0))
+        return back
+    else:
+        new_width = size
+        new_height = size
+        return img.resize((new_width, new_height), resample=Image.NEAREST)
 
 
 # ダミーの問題を生成する（テスト用）
@@ -122,9 +135,17 @@ goal.save(path, format="PNG")
 
 st.markdown("## 一般抜型の画像")
 with st.expander("### 一般抜型の画像一覧を表示"):
+    col3, col4 = st.columns(2)  # 2列に分割する
     for i, general_cell in enumerate(general_cells):
         width, height = general_size[i]
-        st.image(general_cell, caption=f"手数 {i+1}, 横 {width} , 縦 {height}", use_column_width=True)
+    
+        # 交互にカラムに画像を表示
+        if i % 2 == 0:
+            with col3:
+                st.image(general_cell, caption=f"手数 {i+1}, 横 {width} , 縦 {height}", use_column_width=True)
+        else:
+            with col4:
+                st.image(general_cell, caption=f"手数 {i+1}, 横 {width} , 縦 {height}", use_column_width=True)
 
 
 
