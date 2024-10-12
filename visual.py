@@ -92,14 +92,16 @@ with col1:
 with col2:
     st.image(goal, caption="最終盤面", use_column_width=True)
 
+formatted_start_at= start_at.strftime('%Y-%m-%d %H:%M:%S')
+formatted_stop_at= stop_at.strftime('%Y-%m-%d %H:%M:%S')
 st.markdown(f'''
 ## ボード情報
-- 横: **{board_width}**
-- 縦: **{board_height}**
+- 横\: **{board_width}**
+- 縦\: **{board_height}**
 
 ## 時間
-- 開始時間: **{start_at}**
-- 終了時間: **{stop_at}**
+- start time\: **{formatted_start_at}**
+- end time\: **{formatted_stop_at}**
 
 ## 手数: {n}
 '''.format(board_width=board_width, board_height=board_height, start_at=start_at, stop_at=stop_at, general_size=general_size, n=n))
