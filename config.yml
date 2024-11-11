@@ -1,5 +1,5 @@
 manager:
-  ip: 192.168.1.140
+  ip: 127.0.0.1
   port: 8080
   tokens:
   - hinata0517
@@ -9,6 +9,6 @@ manager:
 match_server:
   match_time: 300
   token: ariake90ac96700a7e0f8208caad8bbcc7a8efebf4703ec4a1b9560be92f14b4
-  url: http://192.168.1.140:3000
+  url: http://172.29.1.2:80S
 self:
   id: keita0723

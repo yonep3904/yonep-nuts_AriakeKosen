@@ -6,6 +6,8 @@
 #include <map>
 #include <functional>
 #include <algorithm>
+#include <fstream>
+#include <tuple>
 
 #include "common.hpp"
 #include "operation.hpp"
@@ -41,6 +43,9 @@ private:
     std::map<Type, Type> type_dict;
     std::map<Direction, Direction> direction_dict;
 
+    // 色指定
+    std::vector<std::tuple<int, int, int>> colors;
+
 private:
     // サーバから送られる["1111", "1234", ....](文字列の配列)の形式の盤面状態をVector2D(2次元配列)の形式に整形 
     Vector2D _to_board(const std::vector<std::string>& json_obj);
@@ -52,6 +57,8 @@ private:
 public:
     // コンストラクタ(空コンストラクタ) 
     BoardTemplate();
+    // コンストラクタ(JSONファイルをもとに生成)
+    BoardTemplate(std::ifstream& file);
     // コンストラクタ(JSON形式のデータをもとに生成) -> 本番はこっちを使う
     BoardTemplate(const nlohmann::json& json_text);
     // コンストラクタ(数値や2次元配列などをもとに生成) -> デバッグ・練習の時はこっちが扱いやすいからこっちを使う
@@ -88,6 +95,9 @@ public:
 
     // 変形コードを取得
     const int get_transform_code() const;
+    // 色指定取得
+    const std::vector<std::tuple<int, int, int>>& get_colors() const;
+
     // ゲッターここまで
 
     // 問題情報の標準出力
@@ -168,6 +178,10 @@ inline const PieceType BoardTemplate::operator()(int x, int y) const {
 
 inline const int BoardTemplate::get_transform_code() const {
     return transform_code;
+}
+
+inline const std::vector<std::tuple<int, int, int>>& BoardTemplate::get_colors() const {
+    return colors;
 }
 
 inline const int BoardTemplate::left_limit(Type type, int size, int x0, int y0) const {

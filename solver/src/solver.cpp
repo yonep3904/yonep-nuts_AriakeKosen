@@ -15,6 +15,7 @@
 #include "operation.hpp"
 #include "point_xy.hpp"
 #include "beam_node.hpp"
+#include "state.hpp"
 
 #include "font.hpp"
 
@@ -124,148 +125,78 @@ namespace solver {
         mover::use_all(board, best_action, destination);
     }
 
-    // void beam_serch(Board& board, const PointXY& destination, int lim, int beam_width, int max_depth) {
-    //     priority_queue<Board> now_beam;
-    //     Board best_state;
+    void greedy_twice(Board& board, const PointXY& destination, int lim) {
+        // cout << destination << endl;
+        evaluater::ScoreType best_score = -evaluater::INF;
+        PointXY best_action = {0, 0};
+        int init1 = board.get_count();
 
-    //     now_beam.emplace(board, {-1, -1});
-    //     for(int depth = 0; depth < max_depth; depth++){
-    //         priority_queue<Board> next_beam;
-    //         for(int width = 0; width < beam_width; width++){
-    //             if (now_beam.empty()) {
-    //                 break;
-    //             }
-    //             State now_state = now_beam.top();
-    //             now_beam.pop();
+        auto sources1 = finder::line_priority(board, destination, lim);
+        for (const auto& source1 : sources1) {
+            int init2 = board.get_count();
+            solver::mover::use_all(board, source1, destination);
+            PointXY next_destination = board.next(destination);
+            if (next_destination.x == -1 && next_destination.y == -1) {
+                return;
+            }
+            auto sources2 = finder::line_priority(board, next_destination, lim);
+            for (const auto& source2 : sources2) {
+                mover::use_all(board, source2, next_destination);
+                auto score = solver::evaluater::count_connected(board, destination);
+                if (best_score < score) {
+                    best_score = score;
+                    best_action = source1;
+                }
+                board.back_to(init2);
+            }
+            board.back_to(init1);
+        }
+        solver::mover::use_all(board, best_action, destination);
+     }        
 
-    //             vector<PointXY> sources = solver::finder::line_priority(board, node.destination, lim);
-    //             for(const auto& source : sources){
-    //                 State next_state = now_state;
-    //                 solver::mover::use_all(next_state, source, destination);
-    //                 next_beam.emplace(next_state);
-    //             }
-    //         }
-
-    //         now_beam = move(next_beam);
-    //         best_state = now_beam.top();
-
-    //         if (!beam.empty() && now_beam.top().depth == max_depth) {
-    //             solver::mover::use_all(board, beam.top().origin_source, destination);
-    //             return;
-    //         }
-    //     }
-    // }
-    // void beam_serch(Board& board, const PointXY& destination, int lim, int beam_width, int max_depth) {
-    //     // // 初期の探索状態を保存
-    //     auto init_count = board.get_count();
-    //     // 優先度付きキューで管理
-    //     priority_queue<BeamNode> beam;
-    //     beam.emplace(0, init_count, {-1, -1}, nullptr);
-
-    //     for (int depth = 1; depth < max_depth; depth++) {
-    //         for (int width = 0; width < beam_width; width++) {
-    //             BeamNode node = beam.top();
-    //             solver::mover::use_all(board, node.source, node.destination);
-                
-    //         }
-    //         while (!beam.empty() && next_beam.size() < beam_width) {
-    //             BeamNode node = beam.top();
-    //             beam.pop();
-
-    //             // nodeまで遷移
-    //             solver::mover::use_all(board, node.source, node.destination);
-    //             PointXY next_destination = destination.displace(node.score, board.get_width(), board.get_height());
-    //             // 移動元を探索
-    //             vector<PointXY> sources = solver::finder::line_priority(board, node.destination, lim);
-
-    //             // 各移動元に対して盤面を進める
-    //             for (const auto& source : sources) {
-    //                 auto count = board.get_count();
-    //                 solver::mover::use_all(board, source, next_destination);
-    //                 auto score = solver::evaluater::count_connected(board, destination);
-    //                 next_beam.emplace(score, source, next_destination, count, node);
-    //                 board.back(count);
-                    
-    //             }
-    //             // 盤面を戻す
-    //             board.back_to(node.count);
-    //         }
-    //         // 次のビームを現在のビームとして更新
-    //         beam = move(next_beam);
-    //         // cout << beam.size() << endl;
-    //         // もし最善手が見つかったら、その手を返す
-    //         if (!beam.empty() && beam.top().depth == max_depth) {
-    //             solver::mover::use_all(board, beam.top().origin_source, destination);
-    //             return;
-    //         }
+    void beam_serch(Board& board, const PointXY& destination, int lim, int beam_width, int max_depth) {
+        BeamNode root(board, 0);
         
-    //     vector<PointXY> sources_first = solver::finder::line_priority(board, destination, lim);
-    //     for (const auto& source : sources_first) {
-    //         auto count = board.get_count();
-    //         solver::mover::use_all(board, source, destination);
-    //         auto score = solver::evaluater::count_connected(board, destination);
-    //         beam.emplace(score, count, source, );
-    //         board.back_to(count);
-    //     }
-    // }
+        // 各深さに対して
+        for (int depth = 0; depth < max_depth; depth++) {
+            // 各葉要素に対して
+            auto reaf_nodes = root.get_leaf_nodes();
+            for (const auto& reaf_node : reaf_nodes) {
+                // 試行と評価
+                priority_queue<State> beam;
+                int init = reaf_node->board.get_count();
+                auto next_destination = reaf_node->board.next({0, 0});
+                auto source_candidate = finder::line_priority(board, next_destination);
+                for (const auto& source : source_candidate) {
+                    mover::use_all(reaf_node->board, source, next_destination);
+                    auto score = evaluater::count_connected(reaf_node->board, destination);
+                    beam.emplace(score, source);
+                    reaf_node->board.back_to(init);
+                }
+                // 幅以内でノードの作成
+                auto child_nodes = root.add_children(min(beam_width, int(beam.size())), depth==0);
+                for (const auto& child_node : child_nodes) {
+                    mover::use_all(child_node->board, beam.top().source, destination);
+                    child_node->score = evaluater::count_connected(child_node->board, destination);
+                    beam.pop();
+                }
+            }
+        }
 
-    // void beam_serch(Board& board, const PointXY& destination, int lim, int beam_width, int max_depth) {
-    //     // // 初期の探索状態を保存
-    //     auto init_board = board.get_count();
-    //     // 優先度付きキューで管理
-    //     priority_queue<BeamNode> beam;
-
-    //     vector<PointXY> sources_first = solver::finder::line_priority(board, destination, lim);
-    //     for (const auto& source : sources_first) {
-    //         auto count = board.get_count();
-    //         solver::mover::use_all(board, source, destination);
-    //         auto score = solver::evaluater::count_connected(board, destination);
-    //         beam.emplace(score, source, destination, count, 1);
-    //         board.back_to(count);
-    //     }
-
-    //     for (int depth = 2; depth < max_depth; depth++) {
-    //         priority_queue<BeamNode> next_beam;
-
-    //         while (!beam.empty() && next_beam.size() < beam_width) {
-    //             BeamNode node = beam.top();
-    //             beam.pop();
-
-    //             // nodeまで遷移
-    //             solver::mover::use_all(board, node.source, node.destination);
-    //             PointXY next_destination = destination.displace(node.score, board.get_width(), board.get_height());
-    //             // 移動元を探索
-    //             vector<PointXY> sources = solver::finder::line_priority(board, node.destination, lim);
-
-    //             // 各移動元に対して盤面を進める
-    //             for (const auto& source : sources) {
-    //                 auto count = board.get_count();
-    //                 solver::mover::use_all(board, source, next_destination);
-    //                 auto score = solver::evaluater::count_connected(board, destination);
-    //                 next_beam.emplace(score, source, next_destination, count, node);
-    //                 board.back(count);
-                    
-    //             }
-    //             // 盤面を戻す
-    //             board.back_to(node.count);
-    //         }
-    //         // 次のビームを現在のビームとして更新
-    //         beam = move(next_beam);
-    //         // cout << beam.size() << endl;
-    //         // もし最善手が見つかったら、その手を返す
-    //         if (!beam.empty() && beam.top().depth == max_depth) {
-    //             solver::mover::use_all(board, beam.top().origin_source, destination);
-    //             return;
-    //         }
-    //     }
-        
-    //     // 最終的に残った最善手を返す
-    //     solver::mover::use_all(board, beam.top().origin_source, destination);
-    //     return;
-    // }
+        int best_score = -evaluater::INF;
+        BeamNode* best_board;
+        auto reaf_nodes = root.get_leaf_nodes();
+        for (const auto& reaf_node : reaf_nodes) {
+            int score = evaluater::count_connected(reaf_node->board, destination);
+            if (best_score < score) {
+                best_score = score;
+                best_board = reaf_node;
+            }
+        }
+        board = best_board->get_root_direct_child()->board;
+    }
 }
     
-
 namespace solver::finder {
 
  vector<PointXY> line_priority(const Board& board, const PointXY& finding, int lim) {
@@ -498,9 +429,8 @@ namespace solver::mover {
 namespace solver::evaluater {
     
     ScoreType count_connected(const Board& board, const PointXY& start) {
-        // ScoreType score = board.get_width()*start.y + start.x;
         ScoreType score = 0;
-        for (int y = start.y; y < board.get_height(); y++) {
+        for (int y = start.y + 1; y < board.get_height(); y++) {
             for (int x = start.x; x < board.get_width(); x++) {
                 if (board.is_match(x, y)) {
                     score++;

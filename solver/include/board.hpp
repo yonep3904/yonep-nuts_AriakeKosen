@@ -3,9 +3,13 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
+#include <cstdint>
+#include <memory>
 
 #include "common.hpp"
 #include "board_template.hpp"
+#include "point_xy.hpp"
 
 #include "json.hpp"
 
@@ -28,7 +32,7 @@ private:
 public:
     // コンストラクタ(BoardTemplateオブジェクトをもとに生成)
     Board(const BoardTemplate& board_template);
-
+    Board operator=(Board other) noexcept;
     // ここからメンバ変数のゲッター
 
     // 問題情報を保持するBoardTemplateオブジェクトの取得(参照)
@@ -53,7 +57,10 @@ public:
     void print();
     // 現在の盤面情報の標準出力(カラー付き, Windowsのみ対応)
     void print_color();
-
+    // 現在の盤面情報の画像出力
+    void show();
+    
+    const PointXY next(PointXY start);
     // 座標(x, y)上のピースが揃っているか(最終盤面のピースの数字と一致しているか)判定する
     const bool is_match(int x, int y) const;
     // 全てのピースが揃っているか判定する
@@ -68,6 +75,10 @@ public:
     // 現在までに行った型抜き操作の記録をもとに解答用のJSONオブジェクトを生成し返す
     nlohmann::json dump(bool inverse = true) const;
 
+    // 現在の盤面の状態をもとに画像を生成し,その画像のバイト列を返す
+    std::vector<std::uint8_t> make_image(int rate) const;
+
+    
 private:
     bool _operate_up(Type type, int size, int x0, int y0);
     bool _operate_down(Type type, int size, int x0, int y0);

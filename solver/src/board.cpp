@@ -6,10 +6,14 @@
 #include <deque>
 #include <utility>
 #include <algorithm>
+#include <tuple>
+#include <cstdint>
+#include <memory>
 
 #include "common.hpp"
 #include "board_template.hpp"
 #include "operation.hpp"
+#include "point_xy.hpp"
 
 #include "json.hpp"
 #include "font.hpp"
@@ -23,6 +27,15 @@ Board::Board(const BoardTemplate& board_template):
 {
     state = board_template.get_start();
     count = 0;
+}
+
+Board Board::operator=(Board other) noexcept {
+    if (this != &other) {
+        state = other.state;
+        count = other.count;
+        history = other.history;
+    }
+    return *this;
 }
 
 void Board::print() {
@@ -47,6 +60,22 @@ void Board::print_color() {
         cout << endl;
     }
     cout << endl;
+}
+
+const PointXY Board::next(PointXY start) {
+    for (int x = start.x; x < width; x++) {
+        if (!is_match(x, start.y)) {
+            return {x, start.y};
+        }
+    }
+    for (int y = start.y + 1; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (!is_match(x, y)) {
+            return {x, y};
+            }
+        }
+    }
+    return {-1, -1};
 }
 
 const bool Board::operate(Type type, int size, int x0, int y0, Direction direction) {
@@ -142,6 +171,25 @@ nlohmann::json Board::dump(bool inverse) const {
         result["ops"].push_back(move(ops));
     }
     return result;
+}
+
+vector<uint8_t> Board::make_image(int rate) const {
+    vector<uint8_t> image;
+    image.reserve(width * height * 4 * rate * rate);
+    for (int y = 0; y < height; y++) {
+        for (int y_ = 0; y_ < rate; y_++) {
+            for (int x = 0; x < width; x++) {
+                for (int x_ = 0; x_ < rate; x_++) {
+                    auto [r, g, b] = board_template.get_colors()[state[y][x]];
+                    image.push_back(static_cast<uint8_t>(r));
+                    image.push_back(static_cast<uint8_t>(g));
+                    image.push_back(static_cast<uint8_t>(b));
+                    image.push_back(255);
+                }
+            }
+        }
+    }
+    return image;
 }
 
 bool Board::_operate_up(Type type, int size, int x0, int y0) {

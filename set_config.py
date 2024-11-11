@@ -6,33 +6,33 @@ from pathlib import Path
 config_file = 'config.yml'
 writen_file = 'solver/src/main.cpp'
 
-dir = Path(__file__).parent
+dir = Path(__file__).parent.parent
 
 pattern = re.compile('''\
 namespace config {
     // 通信のインターバル\\[ms\\]
-    const int INTERVAL_TIME = 500;
+    const int INTERVAL_TIME = (\d+);
     // 通信の最高リクエスト回数
-    const int MAX_REQEST = 200;
+    const int MAX_REQEST = (\d+);
 
     // 大会サーバのIP
-    const string MATCH_SERVER_URL = "(.*)";
+    const string MATCH_SERVER_URL = ".*";
     // 大会サーバと通信する際のトークン
-    const string MATCH_SERVER_TOKEN = "(.*)";
+    const string MATCH_SERVER_TOKEN = ".*";
 
     // 解答管理サーバーのIP
-    const string ANSWER_MANAGER_URL = "(.*)";
+    const string ANSWER_MANAGER_URL = ".*";
     // 解答管理サーバーと通信する際のトークン
-    const string ANSWER_MANAGER_TOKEN = "(.*)";
+    const string ANSWER_MANAGER_TOKEN = ".*";
 }\
 ''')
 
 replacements = '''\
 namespace config {{
     // 通信のインターバル[ms]
-    const int INTERVAL_TIME = 500;
+    const int INTERVAL_TIME = {};
     // 通信の最高リクエスト回数
-    const int MAX_REQEST = 20;
+    const int MAX_REQEST = {};
 
     // 大会サーバのIP
     const string MATCH_SERVER_URL = "{}";
@@ -70,19 +70,26 @@ config['match_server']['url'] = f'http://{server_ip}'
 print(f"大会サーバのIPアドレスを {config['match_server']['url']} に設定しました")
 print()
 
-replacements = replacements.format(
-    config['match_server']['url'],
-    config['match_server']['token'],
-    f"http://{config['manager']['ip']}:{config['manager']['port']}",
-    config['self']['id'],
-)
-
 if (input('設定ファイルを書き換えますか？ (Y/n) : ') == 'Y'):
     with open(dir / config_file, 'w', encoding='utf-8') as f:
         yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
+
 if (input('ソースファイルを書き換えますか? (Y/n) : ') == 'Y'):
     with open(dir / writen_file, 'r', encoding='utf-8') as f:
         text = f.read()
+    hit = pattern.search(text)
+    if not hit:
+        raise ValueError(f"ファイル{dir / writen_file}対象の文字列がヒットしません")
+
+    replacements = replacements.format(
+        hit.group(1),
+        hit.group(2),
+        config['match_server']['url'],
+        config['match_server']['token'],
+        f"http://{config['manager']['ip']}:{config['manager']['port']}",
+        config['self']['id'],
+    )
+    
     with open(dir / writen_file, 'w', encoding='utf-8') as f:
         f.write(re.sub(pattern, replacements, text))

@@ -23,6 +23,7 @@ namespace solver {
     // 指定した座標のピースを揃える
     void simple(Board& board, const PointXY& destination);
     void greedy(Board& board, const PointXY& destination, int lim);
+    void greedy_twice(Board& board, const PointXY& destination, int lim);
     void beam_serch(Board& board, const PointXY& destination, int lim, int width, int depth);
     void chokudai_serch(Board& board, const PointXY& destination, int lim, int width, int depth);
     

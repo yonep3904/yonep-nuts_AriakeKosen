@@ -1,0 +1,6 @@
+/manager/__pycache__
+/manager/image_data/*.png
+/manager/log_data/*.log
+/manager/problem_data/*.json
+*.o
+/trash

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <bitset>
 #include <utility>
+#include <fstream>
 
 #include "common.hpp"
 
@@ -171,6 +172,26 @@ void BoardTemplate::init() {
 
 BoardTemplate::BoardTemplate() {
 
+}
+
+BoardTemplate::BoardTemplate(ifstream& file) {
+    nlohmann::json json_text;
+    file >> json_text;
+
+    width = json_text["board"]["width"];
+    height = json_text["board"]["height"];
+    start = _to_board(json_text["board"]["start"]);
+    goal = _to_board(json_text["board"]["goal"]);
+    n = json_text["general"]["n"];
+    general_cells = _to_general_cells(json_text["general"]["patterns"]);
+    transform_code = 0;
+    
+    colors.reserve(json_text["colors"].size());
+    for (const auto& color : json_text["colors"]) {
+        colors.push_back(make_tuple(color[0], color[1], color[2]));
+    }
+    
+    init();
 }
 
 BoardTemplate::BoardTemplate(const nlohmann::json& json_text) :

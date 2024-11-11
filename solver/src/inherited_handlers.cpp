@@ -30,7 +30,6 @@ Response MatchServerHandler::Post_answer(const nlohmann::json& answer) {
     return Response(post_answer.send("POST", answer.dump(), headers));
 }
 
-
 AnswerManagerHandlear::AnswerManagerHandlear(const string& url, const string& token) :
     RequestHandler(url, token, {{"Content-Type", "application/json"}, {"Authorization", token}}),
     post_move(http::Request(url + "/moves")),
