@@ -117,9 +117,9 @@ st.markdown("# Board Image ")
 # 初期盤面と最終盤面を表示
 col1, col2 = st.columns(2)
 with col1:
-    st.image(start, caption="初期盤面", use_column_width=True)
+    st.image(start, caption="初期盤面", use_container_width=True)
 with col2:
-    st.image(goal, caption="最終盤面", use_column_width=True)
+    st.image(goal, caption="最終盤面", use_container_width=True)
 
 formatted_start_at = start_at.strftime('%Y-%m-%d %H:%M:%S')
 formatted_stop_at = stop_at.strftime('%Y-%m-%d %H:%M:%S')
@@ -145,10 +145,10 @@ with st.expander("### 一般抜型の画像一覧を表示"):
         # 交互にカラムに画像を表示
         if i % 2 == 1:
             with col3:
-                st.image(image, caption=f"番号 {i}, 横 {width} , 縦 {height}", use_column_width=True)
+                st.image(image, caption=f"番号 {i}, 横 {width} , 縦 {height}", use_container_width=True)
         else:
             with col4:
-                st.image(image, caption=f"番号 {i}, 横 {width} , 縦 {height}", use_column_width=True)
+                st.image(image, caption=f"番号 {i}, 横 {width} , 縦 {height}", use_container_width=True)
 
 # 一般抜型サイズの情報を文字列に整形して表示（アコーディオン形式）
 with st.expander("### 一般抜型サイズの詳細を表示"):
