@@ -5,7 +5,6 @@ jsonファイルを生成して簡易サーバーを立ち上げるプログラ�
 ## 簡易サーバーを動かす方法
 ~~Windows以外では利用できません。~~ どのOS環境でも利用できます。  
 WIndowsの場合、コマンドライン上での操作は Powershell 上で行ってください。
-(Windows11ならターミナルが入っていると思うので、そちらで行っても大丈夫です)
 
 ### 事前準備
 利用にはPythonとそのライブラリの NumPy が必要です。
@@ -14,7 +13,7 @@ Python のインストール
 実行する場所は関係ないのでどこでもいいです
 
 ```PowerShell
->>> winget install -e --id Python.Python.3.11
+>>> winget install -e --id Python.Python.3.12
 ```
 
 Pythonのライブラリのインストール  
