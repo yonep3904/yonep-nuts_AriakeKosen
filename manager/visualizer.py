@@ -54,14 +54,16 @@ def get_problem(url: str, token: str) -> dict:
 def str_to_int(array: list[str], adder: int = 0) -> list[list[int]]:
     return [[int(char) + adder for char in string] for string in array]
 
-def make_fig(board: list[list[int]], size: int) -> Image:
+def make_fig(board: list[list[int]], size: int, colors: list[tuple[int, int, int]]) -> Image:
+    board = [[int(char) for char in string] for string in board]
+
     width = len(board[0])
     height = len(board)
     img = Image.new('RGB', (width, height))
     pixels = img.load()
     for y in range(height):
         for x in range(width):
-            pixels[x, y] = color_dict[board[y][x]]
+            pixels[x, y] = colors[board[y][x]]
 
     if width > height:
         new_width = size
@@ -102,13 +104,13 @@ board_width = problem["board"]["width"]
 board_height = problem["board"]["height"]
 
 # 初期盤面と最終盤面の画像を生成
-start = make_fig(str_to_int(problem["board"]["start"]), image_size)
-goal = make_fig(str_to_int(problem["board"]["goal"]), image_size)
+start = make_fig(str_to_int(problem["board"]["start"]), image_size, colors=color_dict)
+goal = make_fig(str_to_int(problem["board"]["goal"]), image_size, colors=color_dict)
 
 # 一般抜型のパターンサイズと画像を取得
 n = problem["general"]["n"]
 general_size = [(pattern["width"], pattern["height"]) for pattern in problem["general"]["patterns"]]
-general_cells = [make_fig(str_to_int(pattern["cells"], adder=4), image_size) for pattern in problem["general"]["patterns"]]
+general_cells = [make_fig(str_to_int(pattern["cells"], adder=4), image_size, colors=color_dict) for pattern in problem["general"]["patterns"]]
 
 # Streamlitの設定
 st.markdown("# Board Image ")
