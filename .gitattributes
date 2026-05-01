@@ -1,0 +1,7 @@
+# C++ は PM を使用していないため、ライブラリはリポジトリに含める
+# -> 外部ライブラリは GitHub の言語統計から除外
+solver/lib/gih.h linguist-vendored
+solver/lib/httplib.hpp linguist-vendored
+solver/lib/HTTPRequest.hpp linguist-vendored
+solver/lib/json.hpp linguist-vendored
+solver/lib/dotenv.hpp linguist-vendored

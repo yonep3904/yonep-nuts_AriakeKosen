@@ -1,0 +1,157 @@
+import os
+import sys
+from typing import Any, Iterable
+
+ATTRIBUTES = {
+    "bold": 1,
+    "dark": 2,
+    "underline": 4,
+    "blink": 5,
+    "reverse": 7,
+    "concealed": 8,
+}
+
+
+HIGHLIGHTS = {
+    "on_black": 40,
+    "on_grey": 40,  # Actually black but kept for backwards compatibility
+    "on_red": 41,
+    "on_green": 42,
+    "on_yellow": 43,
+    "on_blue": 44,
+    "on_magenta": 45,
+    "on_cyan": 46,
+    "on_light_grey": 47,
+    "on_dark_grey": 100,
+    "on_light_red": 101,
+    "on_light_green": 102,
+    "on_light_yellow": 103,
+    "on_light_blue": 104,
+    "on_light_magenta": 105,
+    "on_light_cyan": 106,
+    "on_white": 107,
+}
+
+COLORS = {
+    "black": 30,
+    "grey": 30,  # Actually black but kept for backwards compatibility
+    "red": 31,
+    "green": 32,
+    "yellow": 33,
+    "blue": 34,
+    "magenta": 35,
+    "cyan": 36,
+    "light_grey": 37,
+    "dark_grey": 90,
+    "light_red": 91,
+    "light_green": 92,
+    "light_yellow": 93,
+    "light_blue": 94,
+    "light_magenta": 95,
+    "light_cyan": 96,
+    "white": 97,
+}
+
+RESET = "\033[0m"
+
+
+def _can_do_colour(
+    *, no_color: bool | None = None, force_color: bool | None = None
+) -> bool:
+    """Check env vars and for tty/dumb terminal"""
+    # First check overrides:
+    # "User-level configuration files and per-instance command-line arguments should
+    # override $NO_COLOR. A user should be able to export $NO_COLOR in their shell
+    # configuration file as a default, but configure a specific program in its
+    # configuration file to specifically enable color."
+    # https://no-color.org
+    if no_color is not None and no_color:
+        return False
+    if force_color is not None and force_color:
+        return True
+
+    # Then check env vars:
+    if "ANSI_COLORS_DISABLED" in os.environ:
+        return False
+    if "NO_COLOR" in os.environ:
+        return False
+    if "FORCE_COLOR" in os.environ:
+        return True
+    return (
+        hasattr(sys.stdout, "isatty")
+        and sys.stdout.isatty()
+        and os.environ.get("TERM") != "dumb"
+    )
+
+def colored(
+    text: str,
+    color: str | None = None,
+    on_color: str | None = None,
+    attrs: Iterable[str] | None = None,
+    *,
+    no_color: bool | None = None,
+    force_color: bool | None = None,
+) -> str:
+    """Colorize text.
+
+    Available text colors:
+        black, red, green, yellow, blue, magenta, cyan, white,
+        light_grey, dark_grey, light_red, light_green, light_yellow, light_blue,
+        light_magenta, light_cyan.
+
+    Available text highlights:
+        on_black, on_red, on_green, on_yellow, on_blue, on_magenta, on_cyan, on_white,
+        on_light_grey, on_dark_grey, on_light_red, on_light_green, on_light_yellow,
+        on_light_blue, on_light_magenta, on_light_cyan.
+
+    Available attributes:
+        bold, dark, underline, blink, reverse, concealed.
+
+    Example:
+        colored('Hello, World!', 'red', 'on_black', ['bold', 'blink'])
+        colored('Hello, World!', 'green')
+    """
+    if not _can_do_colour(no_color=no_color, force_color=force_color):
+        return text
+
+    fmt_str = "\033[%dm%s"
+    if color is not None:
+        text = fmt_str % (COLORS[color], text)
+
+    if on_color is not None:
+        text = fmt_str % (HIGHLIGHTS[on_color], text)
+
+    if attrs is not None:
+        for attr in attrs:
+            text = fmt_str % (ATTRIBUTES[attr], text)
+
+    return text + RESET
+
+def cprint(
+    text: str,
+    color: str | None = None,
+    on_color: str | None = None,
+    attrs: Iterable[str] | None = None,
+    *,
+    no_color: bool | None = None,
+    force_color: bool | None = None,
+    **kwargs: Any,
+) -> None:
+    """Print colorized text.
+
+    It accepts arguments of print function.
+    """
+
+    print(
+        (
+            colored(
+                text,
+                color,
+                on_color,
+                attrs,
+                no_color=no_color,
+                force_color=force_color,
+            )
+        ),
+        **kwargs,
+    )
